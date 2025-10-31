@@ -15,7 +15,6 @@ export const getLocalIp = (): string => {
         }
     }
 
-    // fallback: first non-internal IPv4
     for (const iface of Object.values(interfaces)) {
         if (!iface) continue;
         for (const alias of iface) {
