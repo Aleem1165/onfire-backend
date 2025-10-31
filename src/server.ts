@@ -22,9 +22,9 @@ app.get('/', (req: Request, res: Response) => {
     res.send('Hello, Onfire server!')
 })
 
-io.on(" ", (socket) => {
+io.on("connection", (socket) => {
     console.log('Client connected')
-    
+
     socket.on("disconnect", () => {
         console.log('Client disconnected');
 
