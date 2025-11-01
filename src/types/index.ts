@@ -1,2 +1,5 @@
 export * from "./user"
 export * from "./utils"
+export * from "./post"
+export * from "./like"
+export * from "./comment"

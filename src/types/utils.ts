@@ -13,7 +13,7 @@ export interface SendMailOptions {
   to: string;
   subject: string;
   otp: string;
-  name:string
+  name: string
 }
 
 declare global {
@@ -21,6 +21,17 @@ declare global {
     interface Request {
       file?: Express.Multer.File;
       files?: { [fieldname: string]: Express.Multer.File[] };
+    }
+  }
+}
+
+
+declare global {
+  namespace Express {
+    interface Request {
+      _id?: string;
+      email?: string;
+      role?: string;
     }
   }
 }
