@@ -11,6 +11,8 @@ const UserSchema = new Schema<IUser>({
     role: { type: String, require: true },
     otpCode: { type: String, default: "" },
     otpExpiresAt: { type: Date, default: null },
+    posts: [{ type: Schema.Types.ObjectId, ref: "Post", default: [] },
+    ],
 }, { timestamps: true })
 
 export const User = mongoose.model<IUser>("User", UserSchema)

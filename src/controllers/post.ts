@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { Post } from "../models/post";
 import { Like } from "../models/like";
 import { Comment } from "../models/comment";
+import { User } from "../models/user";
+import { getPostPopulateOptions } from "../utils/populateOptions";
 
 export const createPost = async (req: Request, res: Response) => {
     try {
@@ -12,6 +14,13 @@ export const createPost = async (req: Request, res: Response) => {
             author: _id, content,
             images: images
         });
+
+        await User.findByIdAndUpdate(
+            _id,
+            { $addToSet: { posts: newPost._id } },
+            { new: true }
+        );
+
         res.status(201).json({
             success: true, message: "Post created successfully", post: newPost
         });
@@ -69,11 +78,19 @@ export const deletePost = async (req: Request, res: Response) => {
             return
         }
 
-        await Like.deleteMany({ post: postId });
+        await Promise.all([
+            Like.deleteMany({ post: postId }),
+            Comment.deleteMany({ post: postId }),
+        ]);
 
         await Post.findByIdAndDelete(postId)
 
-        res.status(200).json({ success: true, message: "Post and related likes deleted successfully" });
+        await User.findByIdAndUpdate(
+            _id,
+            { $pull: { posts: postId } }
+        );
+
+        res.status(200).json({ success: true, message: "Post and related data deleted successfully" });
     } catch (error) {
         res.status(500).json({
             message: error instanceof Error ? error.message : "*Internal server error", success: false,
@@ -166,8 +183,85 @@ export const addComment = async (req: Request, res: Response) => {
 
 export const updateComment = async (req: Request, res: Response) => {
     try {
-        
+        const _id = req._id!;
+        const { commentId } = req.params;
+        const { content } = req.body;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            res.status(404).json({ success: false, message: "*Comment not found" });
+            return
+        }
+
+        if (comment.author.toString() !== _id.toString()) {
+            res.status(403).json({ success: false, message: "*You are not allowed to edit this comment" });
+            return
+        }
+
+        comment.content = content;
+        await comment.save();
+
+        res.status(200).json({ success: true, message: "Comment updated successfully", comment });
     } catch (error) {
-        
+        res.status(500).json({
+            success: false, message: error instanceof Error ? error.message : "*Internal server error",
+        });
     }
-}
+};
+
+export const deleteComment = async (req: Request, res: Response) => {
+    try {
+        const _id = req._id!;
+        const { commentId } = req.params;
+
+        const comment = await Comment.findById(commentId);
+        if (!comment) {
+            res.status(404).json({ success: false, message: "*Comment not found" });
+            return
+        }
+
+        if (comment.author.toString() !== _id.toString()) {
+            return res.status(403).json({ success: false, message: "*You are not allowed to delete this comment" });
+        }
+
+        await Comment.findByIdAndDelete(commentId);
+
+        await Post.findByIdAndUpdate(comment.post, {
+            $pull: { comments: comment._id },
+        });
+
+        res.status(200).json({ success: true, message: "Comment deleted successfully" });
+    } catch (error) {
+        res.status(500).json({
+            success: false, message: error instanceof Error ? error.message : "*Internal server error"
+        });
+    }
+};
+
+export const getPosts = async (req: Request, res: Response) => {
+    try {
+        const { postId } = req.params;
+
+        let posts;
+
+        if (postId) {
+            posts = await Post.findById(postId).populate(getPostPopulateOptions).sort({ createdAt: -1 });
+
+            if (!posts) {
+                res.status(404).json({ success: false, message: "*Post not found" });
+                return
+            }
+
+            return res.status(200).json({ success: true, message: "Post fetched successfully", data: posts });
+        }
+
+        posts = await Post.find().populate(getPostPopulateOptions).sort({ createdAt: -1 });
+
+        res.status(200).json({ success: true, message: "Posts fetched successfully", data: posts });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error instanceof Error ? error.message : "*Internal server error",
+        });
+    }
+};

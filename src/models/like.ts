@@ -10,4 +10,18 @@ const likeSchema = new Schema<ILike>({
 
 likeSchema.index({ author: 1, post: 1 }, { unique: true });
 
+likeSchema.set("toJSON", {
+    transform: function (doc, ret: any) {
+        delete ret.__v;
+        return ret;
+    },
+});
+
+likeSchema.set("toObject", {
+    transform: function (doc, ret: any) {
+        delete ret.__v;
+        return ret;
+    },
+});
+
 export const Like = mongoose.model<ILike>("Like", likeSchema);

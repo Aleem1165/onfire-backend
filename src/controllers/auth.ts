@@ -77,7 +77,7 @@ export const signin = async (req: Request, res: Response) => {
 
         const token = await createJWT(obj);
 
-        const cleanUser = sanitizeUser(user)
+        const cleanUser = sanitizeUser(user, { remove: ["posts"] })
 
         res.status(200).json({ message: "Signin successfully", success: true, user: cleanUser, token });
 
@@ -92,7 +92,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
     try {
         const { email } = req.body
         const lowerEmail = toLowerEmail(email);
-        const user = await User.findOne({ email: lowerEmail });
+        const user = await User.findOne({ email: lowerEmail })
         if (!user) {
             res.status(400).json({
                 message: "*We couldn't find an account with that email address.", success: false,
