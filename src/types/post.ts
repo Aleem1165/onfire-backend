@@ -7,7 +7,8 @@ export interface IPost extends Document {
     images: string[];
     likes: mongoose.Types.ObjectId[];
     comments: mongoose.Types.ObjectId[];
-    // shares: Types.ObjectId[];
+    sharedFrom?: mongoose.Types.ObjectId | null;
+    sharedBy: mongoose.Types.ObjectId[];
     createdAt?: Date;
     updatedAt?: Date;
 }

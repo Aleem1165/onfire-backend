@@ -8,7 +8,8 @@ const postSchema = new Schema<IPost>(
         images: { type: [String], default: [], required: true },
         likes: [{ type: Schema.Types.ObjectId, ref: "Like", default: [], }],
         comments: [{ type: Schema.Types.ObjectId, ref: "Comment", default: [] }],
-        // shares: [{ type: Schema.Types.ObjectId, ref: "Share", default: [], }],
+        sharedFrom: { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: null },
+        sharedBy: [{ type: mongoose.Schema.Types.ObjectId, ref: "User", default: [] }],
     },
     { timestamps: true }
 );

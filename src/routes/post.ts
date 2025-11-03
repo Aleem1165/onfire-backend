@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { addComment, addOrUpdateLike, createPost, deleteComment, deleteLike, deletePost, getPosts, updateComment, updatePost } from "../controllers/post";
+import { addComment, addOrUpdateLike, createPost, deleteComment, deleteLike, deletePost, deleteSharedPost, getPosts, sharePost, updateComment, updatePost } from "../controllers/post";
 import { IsAuth } from "../middlewares/isAuth";
 import { validate } from "../middlewares/validate";
 import { commentValidation, createPostValidation, likeValidation } from "../validations/post";
@@ -14,7 +14,9 @@ router.delete("/deleteLike/:postId", IsAuth, deleteLike);
 router.post("/addComment/:postId", IsAuth, validate(commentValidation), addComment);
 router.put("/updateComment/:commentId", IsAuth, validate(commentValidation), updateComment);
 router.delete("/deleteComment/:commentId", IsAuth, deleteComment);
-router.get("/posts", IsAuth, getPosts);
+router.post("/share/:postId", IsAuth, sharePost);
+router.delete("/deleteShare/:postId", IsAuth, deleteSharedPost);
+router.get("/all", IsAuth, getPosts);
 router.get("/posts/:postId", IsAuth, getPosts);
 
 export default router

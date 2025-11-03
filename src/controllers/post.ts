@@ -252,16 +252,104 @@ export const getPosts = async (req: Request, res: Response) => {
                 return
             }
 
-            return res.status(200).json({ success: true, message: "Post fetched successfully", data: posts });
+            return res.status(200).json({ success: true, message: "Post fetched successfully", post: posts });
         }
 
         posts = await Post.find().populate(getPostPopulateOptions).sort({ createdAt: -1 });
 
-        res.status(200).json({ success: true, message: "Posts fetched successfully", data: posts });
+        res.status(200).json({ success: true, message: "Posts fetched successfully", posts });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: error instanceof Error ? error.message : "*Internal server error",
+        });
+    }
+};
+
+export const sharePost = async (req: Request, res: Response) => {
+    try {
+        const _id = req._id!;
+        const { postId } = req.params;
+        const { content } = req.body;
+
+        const targetPost = await Post.findById(postId);
+        if (!targetPost) {
+            res.status(404).json({ success: false, message: "*Post not found" });
+            return
+        }
+
+        const rootPostId = targetPost.sharedFrom ? targetPost.sharedFrom : targetPost._id;
+
+        const originalPost = await Post.findById(rootPostId);
+        if (!originalPost) {
+            res.status(404).json({ success: false, message: "*Original post not found" });
+            return
+        }
+
+        const sharedPost = await Post.create({
+            author: _id,
+            content: content || "",
+            sharedFrom: rootPostId,
+        });
+
+        await User.findByIdAndUpdate(_id, { $addToSet: { posts: sharedPost._id } });
+
+        await Post.findByIdAndUpdate(rootPostId, { $addToSet: { sharedBy: _id } });
+
+        res.status(201).json({
+            success: true, message: "Post shared successfully", post: sharedPost
+        });
+
+    } catch (error) {
+        res.status(500).json({
+            success: false, message: error instanceof Error ? error.message : "*Internal server error"
+        });
+    }
+};
+
+export const deleteSharedPost = async (req: Request, res: Response) => {
+    try {
+        const _id = req._id;
+        const { postId } = req.params;
+
+        const sharedPost = await Post.findById(postId);
+        if (!sharedPost) {
+            res.status(404).json({ success: false, message: "*Shared post not found" });
+            return;
+        }
+
+        if (!sharedPost.sharedFrom) {
+            res.status(400).json({
+                success: false, message: "*This is not a shared post. Please use the regular post delete API."
+            });
+            return;
+        }
+
+        if (sharedPost.author.toString() !== _id.toString()) {
+            res.status(403).json({ success: false, message: "*You are not allowed to delete this shared post" });
+            return;
+        }
+
+        if (sharedPost.sharedFrom) {
+            const originalPost = await Post.findById(sharedPost.sharedFrom);
+            if (originalPost) {
+                originalPost.sharedBy = originalPost.sharedBy.filter(
+                    (id: any) => id.toString() !== _id.toString()
+                );
+                await originalPost.save();
+            }
+        }
+
+        await Post.findByIdAndDelete(postId);
+
+        await User.findByIdAndUpdate(_id, { $pull: { posts: postId } });
+
+        res.status(200).json({
+            success: true, message: "Shared post deleted successfully"
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false, message: error instanceof Error ? error.message : "*Internal server error"
         });
     }
 };

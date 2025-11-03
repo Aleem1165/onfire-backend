@@ -29,9 +29,9 @@ declare global {
 declare global {
   namespace Express {
     interface Request {
-      _id?: string;
-      email?: string;
-      role?: string;
+      _id: string;
+      email: string;
+      role: string;
     }
   }
 }
