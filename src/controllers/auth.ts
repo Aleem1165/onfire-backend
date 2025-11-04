@@ -77,7 +77,7 @@ export const signin = async (req: Request, res: Response) => {
 
         const token = await createJWT(obj);
 
-        const cleanUser = sanitizeUser(user, { remove: ["posts"] })
+        const cleanUser = sanitizeUser(user, { remove: ["posts" , "eventsJoined" , "eventsCreated"] })
 
         res.status(200).json({ message: "Signin successfully", success: true, user: cleanUser, token });
 

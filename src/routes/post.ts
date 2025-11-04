@@ -17,6 +17,6 @@ router.delete("/deleteComment/:commentId", IsAuth, deleteComment);
 router.post("/share/:postId", IsAuth, sharePost);
 router.delete("/deleteShare/:postId", IsAuth, deleteSharedPost);
 router.get("/all", IsAuth, getPosts);
-router.get("/posts/:postId", IsAuth, getPosts);
+router.get("/:postId", IsAuth, getPosts);
 
 export default router

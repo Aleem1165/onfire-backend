@@ -13,4 +13,6 @@ export interface IUser extends Document {
     otpCode?: string;
     otpExpiresAt?: Date;
     posts: (mongoose.Types.ObjectId | IPost)[];
+    eventsJoined:(mongoose.Types.ObjectId | IPost)[];
+    eventsCreated:(mongoose.Types.ObjectId | IPost)[];
 }
