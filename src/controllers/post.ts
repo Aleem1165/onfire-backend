@@ -83,6 +83,13 @@ export const deletePost = async (req: Request, res: Response) => {
             Comment.deleteMany({ post: postId }),
         ]);
 
+        if (!post.sharedFrom && post.sharedBy && post.sharedBy.length > 0) {
+            await Post.updateMany(
+                { sharedFrom: post._id },
+                { $set: { originalDeleted: true } }
+            );
+        }
+
         await Post.findByIdAndDelete(postId)
 
         await User.findByIdAndUpdate(
@@ -276,6 +283,13 @@ export const sharePost = async (req: Request, res: Response) => {
         if (!targetPost) {
             res.status(404).json({ success: false, message: "*Post not found" });
             return
+        }
+
+        if (targetPost.originalDeleted) {
+            res.status(400).json({
+                success: false, message: "*You cannot share this post because the original post has been deleted"
+            });
+            return;
         }
 
         const rootPostId = targetPost.sharedFrom ? targetPost.sharedFrom : targetPost._id;

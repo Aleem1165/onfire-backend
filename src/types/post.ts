@@ -9,6 +9,7 @@ export interface IPost extends Document {
     comments: mongoose.Types.ObjectId[];
     sharedFrom?: mongoose.Types.ObjectId | null;
     sharedBy: mongoose.Types.ObjectId[];
+    originalDeleted: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 }
